@@ -32,29 +32,47 @@ def recommended(movie):
 
 
 
-movies_dict = pickle.load(open('movies_dict.pkl','rb'))
-movies = pd.DataFrame(movies_dict)
+import os
+
+# Show loading message
+st.sidebar.write("Loading movie data...")
+
+# Load movies data
+try:
+    movies_dict = pickle.load(open('movies_dict.pkl','rb'))
+    movies = pd.DataFrame(movies_dict)
+except FileNotFoundError:
+    st.error("movies_dict.pkl not found. Please ensure the file is in the same directory as the script.")
+    st.stop()
+
+# Show loading message for similarity matrix
+st.sidebar.write("Loading similarity matrix...")
 
 # Try to load similarity matrix
+similarity = None
+similarity_path = os.path.join(os.path.dirname(__file__), 'similarity.pkl.gz')
+
 try:
-    # First try regular .pkl file
-    with open('similarity.pkl', 'rb') as f:
+    import gzip
+    with gzip.open(similarity_path, 'rb') as f:
         similarity = pickle.load(f)
+    st.sidebar.success("✅ Data loaded successfully!")
 except FileNotFoundError:
-    try:
-        # If regular file doesn't exist, try .gz
-        import gzip
-        with gzip.open('similarity.pkl.gz', 'rb') as f:
-            similarity = pickle.load(f)
-    except gzip.BadGzipFile:
-        st.error("The similarity.pkl.gz file is corrupted. Please provide a valid similarity matrix file.")
-        raise
-    except FileNotFoundError:
-        st.error("Neither similarity.pkl nor similarity.pkl.gz found. Please provide a similarity matrix file.")
-        raise
-    except Exception as e:
-        st.error(f"Error loading similarity matrix: {str(e)}")
-        raise
+    st.error(f"Similarity matrix file not found at: {similarity_path}")
+    st.error("Please ensure the similarity.pkl.gz file is present in the application directory.")
+    st.stop()
+except gzip.BadGzipFile:
+    st.error("The similarity matrix file is corrupted. Please provide a valid compressed file.")
+    st.stop()
+except Exception as e:
+    st.error(f"Error loading similarity matrix: {str(e)}")
+    st.stop()
+except FileNotFoundError:
+    st.error("Neither similarity.pkl nor similarity.pkl.gz found. Please provide a similarity matrix file.")
+    raise
+except Exception as e:
+    st.error(f"Error loading similarity matrix: {str(e)}")
+    raise
 
 st.title('movie recommender system')
 
