@@ -67,12 +67,6 @@ except gzip.BadGzipFile:
 except Exception as e:
     st.error(f"Error loading similarity matrix: {str(e)}")
     st.stop()
-except FileNotFoundError:
-    st.error("Neither similarity.pkl nor similarity.pkl.gz found. Please provide a similarity matrix file.")
-    raise
-except Exception as e:
-    st.error(f"Error loading similarity matrix: {str(e)}")
-    raise
 
 st.title('movie recommender system')
 
