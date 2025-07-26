@@ -3,7 +3,7 @@ import requests
 import  streamlit as st
 import pickle
 
-def fetch_postel(movie_id):
+def fetch_poster(movie_id):
     try:
         response = requests.get('https://api.themoviedb.org/3/movie/{}?api_key=fec312a4d375bf2a15e1bac80c05df2d'.format(movie_id))
         data = response.json()
@@ -26,7 +26,7 @@ def recommended(movie):
     for i in movie_list:
         movie_id = movies.iloc[i[0]].id
         recommended_movie.append(movies.iloc[i[0]].title)
-        recommended_movie_posters.append(fetch_postel(movie_id))
+        recommended_movie_posters.append(fetch_poster(movie_id))
         print(movies.iloc[i[0]].title)
     return  recommended_movie, recommended_movie_posters
 
@@ -35,7 +35,26 @@ def recommended(movie):
 movies_dict = pickle.load(open('movies_dict.pkl','rb'))
 movies = pd.DataFrame(movies_dict)
 
-similarity = pickle.load(open('similarity.pkl','rb'))
+# Try to load similarity matrix
+try:
+    # First try regular .pkl file
+    with open('similarity.pkl', 'rb') as f:
+        similarity = pickle.load(f)
+except FileNotFoundError:
+    try:
+        # If regular file doesn't exist, try .gz
+        import gzip
+        with gzip.open('similarity.pkl.gz', 'rb') as f:
+            similarity = pickle.load(f)
+    except gzip.BadGzipFile:
+        st.error("The similarity.pkl.gz file is corrupted. Please provide a valid similarity matrix file.")
+        raise
+    except FileNotFoundError:
+        st.error("Neither similarity.pkl nor similarity.pkl.gz found. Please provide a similarity matrix file.")
+        raise
+    except Exception as e:
+        st.error(f"Error loading similarity matrix: {str(e)}")
+        raise
 
 st.title('movie recommender system')
 
